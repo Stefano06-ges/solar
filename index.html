@@ -3,148 +3,997 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Previsioni Solari</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>☀️ Solar Dashboard — Previsioni Pannelli Solari</title>
+    <meta name="description" content="Dashboard per il monitoraggio e le previsioni di produzione dei pannelli solari domestici con dati Solcast in tempo reale.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-            margin: 0;
-            padding: 20px;
+        /* ===== CSS RESET & VARIABLES ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #070b1e;
+            --bg-secondary: #0d1233;
+            --bg-card: rgba(17, 24, 60, 0.65);
+            --bg-card-hover: rgba(25, 34, 80, 0.75);
+            --border-card: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(245, 158, 11, 0.15);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --accent-gold: #f59e0b;
+            --accent-gold-light: #fbbf24;
+            --accent-gold-dim: rgba(245, 158, 11, 0.15);
+            --accent-blue: #3b82f6;
+            --accent-blue-light: #60a5fa;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 30px rgba(245, 158, 11, 0.08);
+
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-med: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        .container { max-width: 1000px; margin: 0 auto; }
-        h1 { text-align: center; color: #f59e0b; margin-bottom: 20px; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ===== BACKGROUND EFFECTS ===== */
+        .bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 50% 90%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+        }
+
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            background-image:
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.25), transparent),
+                radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.15), transparent),
+                radial-gradient(1.5px 1.5px at 15% 80%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.3), transparent);
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-container {
+            position: relative; z-index: 1;
+            max-width: 1400px; margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 0; flex-wrap: wrap; gap: 16px;
+            border-bottom: 1px solid var(--border-card);
+            margin-bottom: 28px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 14px; }
+
+        .logo-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--accent-gold), #f97316);
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.25); }
+            50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.4); }
+        }
+
+        .header-title h1 {
+            font-size: 22px; font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-gold-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            font-size: 12px; color: var(--text-muted);
+            font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;
+        }
+
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .status-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 100px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 12px; font-weight: 600; color: var(--accent-green-light);
+        }
+
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-green); animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 9px 18px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-card);
+            background: var(--bg-card); color: var(--text-secondary);
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: var(--font-family);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover); color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-gold), #f97316);
+            color: #000; border-color: transparent;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            color: #000;
+        }
+
+        .btn .icon { font-size: 16px; }
+
+        /* ===== LAST UPDATE BAR ===== */
+        .update-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 18px; margin-bottom: 24px;
+            background: var(--bg-card); border: 1px solid var(--border-card);
+            border-radius: var(--radius-md); font-size: 13px;
+            flex-wrap: wrap; gap: 10px;
+            backdrop-filter: blur(12px);
+        }
+
+        .update-bar .label { color: var(--text-muted); }
+        .update-bar .value { color: var(--text-secondary); font-weight: 600; }
+
+        /* ===== KPI CARDS ===== */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 16px; margin-bottom: 28px;
         }
-        .card {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #334155;
-            text-align: center;
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            position: relative; overflow: hidden;
+            transition: all var(--transition-med);
+            backdrop-filter: blur(12px);
         }
-        .card .title { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
-        .card .value { font-size: 24px; font-weight: bold; color: #f59e0b; margin-top: 5px; }
-        .chart-box {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #334155;
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
         }
-        #status { text-align: center; color: #94a3b8; font-style: italic; margin-bottom: 10px; }
+
+        .kpi-card .kpi-glow {
+            position: absolute; top: -30px; right: -30px;
+            width: 80px; height: 80px; border-radius: 50%;
+            opacity: 0.12; filter: blur(20px);
+            transition: opacity var(--transition-med);
+        }
+
+        .kpi-card:hover .kpi-glow { opacity: 0.2; }
+
+        .kpi-card .kpi-icon {
+            width: 40px; height: 40px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 14px;
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 12px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 28px; font-weight: 800; line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .kpi-card .kpi-unit {
+            font-size: 14px; font-weight: 500; opacity: 0.6;
+        }
+
+        .kpi-card .kpi-sub {
+            font-size: 11px; color: var(--text-muted); margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .kpi-card.gold .kpi-icon { background: var(--accent-gold-dim); }
+        .kpi-card.gold .kpi-glow { background: var(--accent-gold); }
+        .kpi-card.gold .kpi-value { color: var(--accent-gold-light); }
+
+        .kpi-card.blue .kpi-icon { background: rgba(59, 130, 246, 0.15); }
+        .kpi-card.blue .kpi-glow { background: var(--accent-blue); }
+        .kpi-card.blue .kpi-value { color: var(--accent-blue-light); }
+
+        .kpi-card.green .kpi-icon { background: rgba(16, 185, 129, 0.15); }
+        .kpi-card.green .kpi-glow { background: var(--accent-green); }
+        .kpi-card.green .kpi-value { color: var(--accent-green-light); }
+
+        .kpi-card.purple .kpi-icon { background: rgba(139, 92, 246, 0.15); }
+        .kpi-card.purple .kpi-glow { background: var(--accent-purple); }
+        .kpi-card.purple .kpi-value { color: #a78bfa; }
+
+        .kpi-card.cyan .kpi-icon { background: rgba(6, 182, 212, 0.15); }
+        .kpi-card.cyan .kpi-glow { background: var(--accent-cyan); }
+        .kpi-card.cyan .kpi-value { color: #22d3ee; }
+
+        .kpi-card.red .kpi-icon { background: rgba(239, 68, 68, 0.15); }
+        .kpi-card.red .kpi-glow { background: var(--accent-red); }
+        .kpi-card.red .kpi-value { color: #f87171; }
+
+        /* ===== PANEL ===== */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(12px);
+            transition: border-color var(--transition-med);
+        }
+
+        .panel:hover { border-color: rgba(255, 255, 255, 0.08); }
+
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+
+        .panel-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 16px; font-weight: 700;
+        }
+
+        .panel-title .emoji { font-size: 20px; }
+
+        .panel-tabs {
+            display: flex; gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+        }
+
+        .panel-tab {
+            padding: 6px 14px; border-radius: 6px;
+            font-size: 12px; font-weight: 600;
+            color: var(--text-muted); cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none; background: none;
+            font-family: var(--font-family);
+        }
+
+        .panel-tab:hover { color: var(--text-secondary); }
+        .panel-tab.active {
+            background: var(--accent-gold-dim);
+            color: var(--accent-gold-light);
+        }
+
+        .chart-container {
+            position: relative; width: 100%;
+            height: 350px;
+        }
+
+        /* ===== GRID LAYOUTS ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        @media (max-width: 860px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* ===== DAY SELECTOR ===== */
+        .day-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .day-btn {
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-card);
+            background: transparent; color: var(--text-muted);
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: var(--font-family);
+        }
+
+        .day-btn:hover { border-color: rgba(255,255,255,0.12); color: var(--text-secondary); }
+        .day-btn.active {
+            background: var(--accent-gold-dim);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--accent-gold-light);
+        }
+
+        /* ===== SETTINGS PANEL ===== */
+        .settings-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            opacity: 0; visibility: hidden;
+            transition: all var(--transition-med);
+        }
+
+        .settings-overlay.open { opacity: 1; visibility: visible; }
+
+        .settings-panel {
+            position: fixed; top: 0; right: -480px; bottom: 0;
+            width: 440px; max-width: 90vw; z-index: 101;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-card);
+            padding: 30px;
+            transition: right var(--transition-med);
+            overflow-y: auto;
+        }
+
+        .settings-overlay.open .settings-panel { right: 0; }
+
+        .settings-panel h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+        .settings-panel .subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+
+        .settings-group { margin-bottom: 24px; }
+        .settings-group label {
+            display: block; font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--text-muted); margin-bottom: 8px;
+        }
+
+        .settings-group input {
+            width: 100%; padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px; font-family: var(--font-family);
+            transition: border-color var(--transition-fast);
+        }
+
+        .settings-group input:focus { outline: none; border-color: var(--accent-gold); }
+        .settings-group .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+        .settings-close {
+            position: absolute; top: 20px; right: 20px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--bg-card); border: 1px solid var(--border-card);
+            color: var(--text-secondary); font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .settings-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+        /* ===== ERROR / LOADING STATES ===== */
+        .loading-overlay {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 60px 20px; text-align: center;
+        }
+
+        .loading-spinner {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 3px solid var(--border-card);
+            border-top-color: var(--accent-gold);
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-md);
+            padding: 20px 24px; margin-bottom: 24px;
+            display: none;
+        }
+
+        .error-box.show { display: block; }
+        .error-box h3 { color: #f87171; font-size: 15px; margin-bottom: 6px; }
+        .error-box p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+
+        /* ===== ENERGY SUMMARY MINI BARS ===== */
+        .energy-bar-row {
+            display: flex; align-items: center; gap: 12px; padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .energy-bar-row:last-child { border-bottom: none; }
+
+        .energy-bar-label { min-width: 90px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .energy-bar-track { flex: 1; height: 10px; background: rgba(255, 255, 255, 0.04); border-radius: 100px; overflow: hidden; }
+        .energy-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent-gold), #f97316); transition: width 0.8s ease; }
+        .energy-bar-value { min-width: 70px; text-align: right; font-size: 14px; font-weight: 700; color: var(--accent-gold-light); }
+
+        /* ===== FORECAST TIMELINE ===== */
+        .timeline-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            transition: background var(--transition-fast);
+        }
+        .timeline-row:hover { background: rgba(255, 255, 255, 0.03); }
+        .timeline-time { min-width: 60px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .timeline-bar-wrap { flex: 1; }
+        .timeline-bar { height: 6px; border-radius: 100px; background: rgba(255, 255, 255, 0.04); position: relative; }
+        .timeline-bar-inner { position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); transition: width 0.6s ease; }
+        .timeline-val { min-width: 60px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center; padding: 30px 0 10px;
+            font-size: 12px; color: var(--text-muted);
+            border-top: 1px solid var(--border-card); margin-top: 20px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .app-container { padding: 0 12px 30px; }
+            .header { padding: 16px 0; }
+            .header-title h1 { font-size: 18px; }
+            .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+            .kpi-card { padding: 16px 18px; }
+            .kpi-card .kpi-value { font-size: 22px; }
+            .chart-container { height: 260px; }
+            .panel { padding: 16px; }
+        }
     </style>
 </head>
 <body>
+    <div class="bg-mesh"></div>
+    <div class="stars"></div>
 
-<div class="container">
-    <h1>☀️ Previsione Solare Domestica</h1>
-    <div id="status">Caricamento dati in corso...</div>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon">☀️</div>
+                <div class="header-title">
+                    <h1>Solar Dashboard</h1>
+                    <p>Previsioni Pannelli Solari</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Connesso</span>
+                </div>
+                <button class="btn" onclick="fetchSolarData()" id="refreshBtn">
+                    <span class="icon">🔄</span> Aggiorna
+                </button>
+                <button class="btn" onclick="toggleSettings()">
+                    <span class="icon">⚙️</span> Impostazioni
+                </button>
+            </div>
+        </header>
 
-    <div class="kpi-grid">
-        <div class="card">
-            <div class="title">Picco Massimo</div>
-            <div class="value" id="kpiPeak">- kW</div>
+        <div class="error-box" id="errorBox">
+            <h3>⚠️ Attenzione</h3>
+            <p id="errorMsg"></p>
         </div>
-        <div class="card">
-            <div class="title">Energia Stimata Totale</div>
-            <div class="value" id="kpiEnergy">- kWh</div>
+
+        <div class="update-bar" id="updateBar" style="display:none;">
+            <div>
+                <span class="label">Ultimo aggiornamento:</span>
+                <span class="value" id="lastUpdate">—</span>
+            </div>
+            <div>
+                <span class="label">Periodo previsione:</span>
+                <span class="value" id="forecastRange">—</span>
+            </div>
+            <div>
+                <span class="label">Intervalli:</span>
+                <span class="value" id="totalPeriods">—</span>
+            </div>
         </div>
-        <div class="card">
-            <div class="title">Punti Dati</div>
-            <div class="value" id="kpiCount">-</div>
+
+        <div class="loading-overlay" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p style="color: var(--text-secondary); font-weight: 600;">Caricamento previsioni solari...</p>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Connessione a Solcast API tramite CORS Proxy</p>
+        </div>
+
+        <div id="mainContent" style="display:none;">
+
+            <div class="kpi-grid">
+                <div class="kpi-card gold">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-label">Picco Potenza</div>
+                    <div class="kpi-value"><span id="kpiPeak">—</span> <span class="kpi-unit">kW</span></div>
+                    <div class="kpi-sub" id="kpiPeakTime">—</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">🔋</div>
+                    <div class="kpi-label">Energia Oggi</div>
+                    <div class="kpi-value"><span id="kpiEnergyToday">—</span> <span class="kpi-unit">kWh</span></div>
+                    <div class="kpi-sub" id="kpiEnergyRange">Oggi</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">📡</div>
+                    <div class="kpi-label">Prossima Previsione</div>
+                    <div class="kpi-value"><span id="kpiNext">—</span> <span class="kpi-unit">kW</span></div>
+                    <div class="kpi-sub" id="kpiNextTime">—</div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">Energia Domani</div>
+                    <div class="kpi-value"><span id="kpiEnergyTomorrow">—</span> <span class="kpi-unit">kWh</span></div>
+                    <div class="kpi-sub" id="kpiEnergyTomorrowRange">Domani</div>
+                </div>
+                <div class="kpi-card cyan">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">☀️</div>
+                    <div class="kpi-label">Ore Produttive Oggi</div>
+                    <div class="kpi-value"><span id="kpiSunHours">—</span> <span class="kpi-unit">ore</span></div>
+                    <div class="kpi-sub" id="kpiSunHoursDetail">> 0.1 kW</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-glow"></div>
+                    <div class="kpi-icon">📈</div>
+                    <div class="kpi-label">Energia Totale Prevista</div>
+                    <div class="kpi-value"><span id="kpiTotalEnergy">—</span> <span class="kpi-unit">kWh</span></div>
+                    <div class="kpi-sub" id="kpiTotalDays">Periodo Totale</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="emoji">📈</span> Previsione Potenza
+                    </div>
+                    <div class="panel-tabs">
+                        <button class="panel-tab active" onclick="setMainChartView('all', this)">Tutto</button>
+                        <button class="panel-tab" onclick="setMainChartView('today', this)">Oggi</button>
+                        <button class="panel-tab" onclick="setMainChartView('tomorrow', this)">Domani</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="emoji">📊</span> Energia Giornaliera
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 280px;">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="emoji">🔋</span> Riepilogo per Giorno
+                        </div>
+                    </div>
+                    <div id="energySummaryBars"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="emoji">🕐</span> Dettaglio Orario
+                    </div>
+                    <div class="day-selector" id="daySelector"></div>
+                </div>
+                <div id="hourlyTimeline"></div>
+            </div>
+
+        </div>
+
+        <footer class="footer">
+            <p>Solar Dashboard — Dati meteo forniti da Solcast API</p>
+        </footer>
+    </div>
+
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+            <button class="settings-close" onclick="toggleSettings()">✕</button>
+            <h2>Impostazioni</h2>
+            <p class="subtitle">Configura i parametri delle API Solcast</p>
+
+            <div class="settings-group">
+                <label for="apiKeyInput">Solcast API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="Inserisci la tua API Key">
+                <div class="hint">La chiave viene salvata solo sul tuo browser.</div>
+            </div>
+
+            <div class="settings-group">
+                <label for="resourceIdInput">Resource / Site ID</label>
+                <input type="text" id="resourceIdInput" placeholder="es. xxxx-xxxx-xxxx-xxxx">
+                <div class="hint">L'ID del tuo impianto su Solcast.</div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveSettings()">Salva e Aggiorna</button>
         </div>
     </div>
 
-    <div class="chart-box">
-        <canvas id="solarChart" height="120"></canvas>
-    </div>
-</div>
+    <script>
+        // Preset chiavi predefinite
+        const DEFAULT_API_KEY = 'Zzew_jcS8dHT3ej274HNT8YPibNNVjBR';
+        const DEFAULT_RESOURCE_ID = '6666-b7d5-1304-328e';
 
-<script>
-    const API_KEY = 'Zzew_jcS8dHT3ej274HNT8YPibNNVjBR';
-    const SOLCAST_URL = `https://api.solcast.com.au/rooftop_sites/6666-b7d5-1304-328e/forecasts?format=json&api_key=${API_KEY}`;
+        let forecastsData = [];
+        let mainChartObj = null;
+        let dailyChartObj = null;
 
-    // Passiamo la chiamata tramite corsproxy.io (funziona gratis su github.io!)
-    const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(SOLCAST_URL);
+        let config = {
+            apiKey: localStorage.getItem('solcast_api_key') || DEFAULT_API_KEY,
+            resourceId: localStorage.getItem('solcast_resource_id') || DEFAULT_RESOURCE_ID
+        };
 
-    async function loadData() {
-        try {
-            const res = await fetch(PROXY_URL);
-            
-            // Gestione specifica dell'errore 429 (Troppe richieste Solcast)
-            if (res.status === 429) {
-                throw new Error('Limite chiamate Solcast superato (Errore 429). Riprova più tardi!');
-            }
-            
-            if (!res.ok) {
-                throw new Error(`Errore HTTP: ${res.status}`);
-            }
-            
-            const rawData = await res.json();
-            document.getElementById('status').textContent = 'Dati live Solcast caricati con successo!';
-            renderDashboard(rawData.forecasts || []);
-            
-        } catch (err) {
-            console.error(err);
-            document.getElementById('status').textContent = '⚠️ ' + err.message;
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('apiKeyInput').value = config.apiKey;
+            document.getElementById('resourceIdInput').value = config.resourceId;
+            fetchSolarData();
+        });
+
+        function toggleSettings() {
+            document.getElementById('settingsOverlay').classList.toggle('open');
         }
-    }
 
-    function renderDashboard(forecasts) {
-        let maxPeak = 0;
-        let totalEnergy = 0;
+        function saveSettings() {
+            config.apiKey = document.getElementById('apiKeyInput').value.trim() || DEFAULT_API_KEY;
+            config.resourceId = document.getElementById('resourceIdInput').value.trim() || DEFAULT_RESOURCE_ID;
 
-        const labels = forecasts.map(f => {
-            const date = new Date(f.period_end);
-            return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
-        });
+            localStorage.setItem('solcast_api_key', config.apiKey);
+            localStorage.setItem('solcast_resource_id', config.resourceId);
 
-        const values = forecasts.map(f => {
-            const kw = f.pv_estimate;
-            if (kw > maxPeak) maxPeak = kw;
-            totalEnergy += kw * 0.5;
-            return kw;
-        });
+            toggleSettings();
+            fetchSolarData();
+        }
 
-        document.getElementById('kpiPeak').textContent = maxPeak.toFixed(2) + ' kW';
-        document.getElementById('kpiEnergy').textContent = totalEnergy.toFixed(2) + ' kWh';
-        document.getElementById('kpiCount').textContent = forecasts.length;
-
-        const ctx = document.getElementById('solarChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Potenza Stimata (kW)',
-                    data: values,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, beginAtZero: true }
-                },
-                plugins: {
-                    legend: { labels: { color: '#f8fafc' } }
-                }
+        function showLoading(show) {
+            document.getElementById('loadingState').style.display = show ? 'flex' : 'none';
+            if (show) {
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('updateBar').style.display = 'none';
             }
-        });
-    }
+        }
 
-    loadData();
-</script>
+        function showError(msg) {
+            const errBox = document.getElementById('errorBox');
+            document.getElementById('errorMsg').textContent = msg;
+            errBox.classList.add('show');
+        }
 
+        function hideError() {
+            document.getElementById('errorBox').classList.remove('show');
+        }
+
+        async function fetchSolarData() {
+            showLoading(true);
+            hideError();
+
+            const solcastUrl = `https://api.solcast.com.au/rooftop_sites/${config.resourceId}/forecasts?format=json&api_key=${config.apiKey}`;
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(solcastUrl);
+
+            try {
+                const response = await fetch(proxyUrl);
+                
+                if (response.status === 429) {
+                    throw new Error("Limite giornaliero chiamate Solcast superato (Errore 429). Riprova più tardi!");
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`Errore Solcast API: status ${response.status}`);
+                }
+
+                const data = await response.json();
+                forecastsData = data.forecasts || [];
+
+                if (forecastsData.length === 0) {
+                    throw new Error("Nessun dato di previsione ricevuto.");
+                }
+
+                showLoading(false);
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('updateBar').style.display = 'flex';
+
+                renderAllDashboard(forecastsData);
+
+            } catch (err) {
+                showLoading(false);
+                console.error(err);
+                showError(err.message);
+            }
+        }
+
+        function renderAllDashboard(data) {
+            // Ultimo aggiornamento
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('totalPeriods').textContent = data.length + " intervalli (30m)";
+
+            const startDate = new Date(data[0].period_end);
+            const endDate = new Date(data[data.length - 1].period_end);
+            document.getElementById('forecastRange').textContent = `${startDate.getDate()}/${startDate.getMonth()+1} - ${endDate.getDate()}/${endDate.getMonth()+1}`;
+
+            // Calcolo KPI
+            let peakKw = 0;
+            let peakTime = null;
+            let totalEnergyAll = 0;
+            let todayEnergy = 0;
+            let tomorrowEnergy = 0;
+            let todaySunHoursCount = 0;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            data.forEach((f) => {
+                const kw = f.pv_estimate;
+                const fDate = new Date(f.period_end);
+                const dateStr = fDate.toISOString().split('T')[0];
+
+                if (kw > peakKw) {
+                    peakKw = kw;
+                    peakTime = fDate;
+                }
+
+                const energyKwh = kw * 0.5; // Intervallo di 30m = 0.5 ore
+                totalEnergyAll += energyKwh;
+
+                if (dateStr === todayStr) {
+                    todayEnergy += energyKwh;
+                    if (kw > 0.1) todaySunHoursCount += 0.5;
+                } else if (dateStr === tomorrowStr) {
+                    tomorrowEnergy += energyKwh;
+                }
+            });
+
+            document.getElementById('kpiPeak').textContent = peakKw.toFixed(2);
+            document.getElementById('kpiPeakTime').textContent = peakTime ? peakTime.toLocaleString('it-IT', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+
+            document.getElementById('kpiEnergyToday').textContent = todayEnergy.toFixed(2);
+            document.getElementById('kpiEnergyTomorrow').textContent = tomorrowEnergy.toFixed(2);
+            document.getElementById('kpiSunHours').textContent = todaySunHoursCount.toFixed(1);
+            document.getElementById('kpiTotalEnergy').textContent = totalEnergyAll.toFixed(2);
+
+            // Prossima previsione
+            const nextForecast = data[0];
+            document.getElementById('kpiNext').textContent = nextForecast ? nextForecast.pv_estimate.toFixed(2) : '—';
+            document.getElementById('kpiNextTime').textContent = nextForecast ? new Date(nextForecast.period_end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '—';
+
+            // Grafici e Timeline
+            renderMainChart(data, 'all');
+            renderDailyChartAndBars(data);
+            renderHourlyTimeline(data);
+        }
+
+        function renderMainChart(data, filter) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            let filteredData = data;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            if (filter === 'today') {
+                filteredData = data.filter(f => new Date(f.period_end).toISOString().split('T')[0] === todayStr);
+            } else if (filter === 'tomorrow') {
+                filteredData = data.filter(f => new Date(f.period_end).toISOString().split('T')[0] === tomorrowStr);
+            }
+
+            const labels = filteredData.map(f => new Date(f.period_end));
+            const values = filteredData.map(f => f.pv_estimate);
+
+            if (mainChartObj) mainChartObj.destroy();
+
+            mainChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Potenza Stimata (kW)',
+                        data: values,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: filter === 'all' ? 'day' : 'hour', displayFormats: { hour: 'HH:mm', day: 'dd MMM' } },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function setMainChartView(view, btn) {
+            document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderMainChart(forecastsData, view);
+        }
+
+        function renderDailyChartAndBars(data) {
+            const dailyTotals = {};
+            data.forEach(f => {
+                const dateStr = new Date(f.period_end).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+                const energy = f.pv_estimate * 0.5;
+                dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + energy;
+            });
+
+            const labels = Object.keys(dailyTotals);
+            const values = Object.values(dailyTotals);
+
+            // Grafico a barre
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            if (dailyChartObj) dailyChartObj.destroy();
+
+            dailyChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energia (kWh)',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Barre orizzontali di riepilogo
+            const maxVal = Math.max(...values, 1);
+            const summaryContainer = document.getElementById('energySummaryBars');
+            summaryContainer.innerHTML = '';
+
+            labels.forEach((label, idx) => {
+                const val = values[idx];
+                const pct = (val / maxVal) * 100;
+                summaryContainer.innerHTML += `
+                    <div class="energy-bar-row">
+                        <div class="energy-bar-label">${label}</div>
+                        <div class="energy-bar-track">
+                            <div class="energy-bar-fill" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="energy-bar-value">${val.toFixed(2)} kWh</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderHourlyTimeline(data) {
+            const groupedByDay = {};
+            data.forEach(f => {
+                const dateKey = new Date(f.period_end).toISOString().split('T')[0];
+                if (!groupedByDay[dateKey]) groupedByDay[dateKey] = [];
+                groupedByDay[dateKey].push(f);
+            });
+
+            const days = Object.keys(groupedByDay);
+            const selector = document.getElementById('daySelector');
+            selector.innerHTML = '';
+
+            days.forEach((dayStr, idx) => {
+                const d = new Date(dayStr);
+                const label = d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' });
+                const btn = document.createElement('button');
+                btn.className = `day-btn ${idx === 0 ? 'active' : ''}`;
+                btn.textContent = label;
+                btn.onclick = () => {
+                    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    drawTimelineRows(groupedByDay[dayStr]);
+                };
+                selector.appendChild(btn);
+            });
+
+            if (days.length > 0) drawTimelineRows(groupedByDay[days[0]]);
+        }
+
+        function drawTimelineRows(dayData) {
+            const container = document.getElementById('hourlyTimeline');
+            container.innerHTML = '';
+
+            const maxKw = Math.max(...dayData.map(f => f.pv_estimate), 0.1);
+
+            dayData.forEach(f => {
+                const time = new Date(f.period_end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const kw = f.pv_estimate;
+                const pct = (kw / maxKw) * 100;
+
+                container.innerHTML += `
+                    <div class="timeline-row">
+                        <div class="timeline-time">${time}</div>
+                        <div class="timeline-bar-wrap">
+                            <div class="timeline-bar">
+                                <div class="timeline-bar-inner" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                        <div class="timeline-val">${kw.toFixed(2)} kW</div>
+                    </div>
+                `;
+            });
+        }
+    </script>
 </body>
 </html>
