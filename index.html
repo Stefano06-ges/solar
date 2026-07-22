@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsioni Solari</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; color: #f59e0b; margin-bottom: 20px; }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        .card .title { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+        .card .value { font-size: 24px; font-weight: bold; color: #f59e0b; margin-top: 5px; }
+        .chart-box {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+        #status { text-align: center; color: #94a3b8; font-style: italic; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>☀️ Previsione Solare Domestica</h1>
+    <div id="status">Caricamento dati in corso...</div>
+
+    <div class="kpi-grid">
+        <div class="card">
+            <div class="title">Picco Massimo</div>
+            <div class="value" id="kpiPeak">- kW</div>
+        </div>
+        <div class="card">
+            <div class="title">Energia Stimata Totale</div>
+            <div class="value" id="kpiEnergy">- kWh</div>
+        </div>
+        <div class="card">
+            <div class="title">Punti Dati</div>
+            <div class="value" id="kpiCount">-</div>
+        </div>
+    </div>
+
+    <div class="chart-box">
+        <canvas id="solarChart" height="120"></canvas>
+    </div>
+</div>
+
+<script>
+    const API_KEY = 'Zzew_jcS8dHT3ej274HNT8YPibNNVjBR';
+    const SOLCAST_URL = `https://api.solcast.com.au/rooftop_sites/6666-b7d5-1304-328e/forecasts?format=json&api_key=${API_KEY}`;
+
+    async function loadData() {
+        try {
+            const res = await fetch(SOLCAST_URL);
+            if (!res.ok) throw new Error(`Errore HTTP: ${res.status}`);
+            
+            const rawData = await res.json();
+            document.getElementById('status').textContent = 'Dati live Solcast caricati!';
+            renderDashboard(rawData.forecasts || []);
+        } catch (err) {
+            console.error(err);
+            document.getElementById('status').textContent = '⚠️ Errore CORS o API Key errata.';
+        }
+    }
+
+    // Mancava questa funzione per elaborare i dati e creare il grafico
+    function renderDashboard(forecasts) {
+        let maxPeak = 0;
+        let totalEnergy = 0;
+
+        const labels = forecasts.map(f => {
+            const date = new Date(f.period_end);
+            return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+        });
+
+        const values = forecasts.map(f => {
+            const kw = f.pv_estimate;
+            if (kw > maxPeak) maxPeak = kw;
+            totalEnergy += kw * 0.5; // Intervalli di 30 minuti (0.5 ore)
+            return kw;
+        });
+
+        // Aggiorna le schede KPI
+        document.getElementById('kpiPeak').textContent = maxPeak.toFixed(2) + ' kW';
+        document.getElementById('kpiEnergy').textContent = totalEnergy.toFixed(2) + ' kWh';
+        document.getElementById('kpiCount').textContent = forecasts.length;
+
+        // Disegna il grafico
+        const ctx = document.getElementById('solarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Potenza Stimata (kW)',
+                    data: values,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, beginAtZero: true }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8fafc' } }
+                }
+            }
+        });
+    }
+
+    // Mancava l'invocazione per avviare il caricamento!
+    loadData();
+</script>
+
+</body>
+</html>
