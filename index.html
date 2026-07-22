@@ -69,21 +69,32 @@
     const API_KEY = 'Zzew_jcS8dHT3ej274HNT8YPibNNVjBR';
     const SOLCAST_URL = `https://api.solcast.com.au/rooftop_sites/6666-b7d5-1304-328e/forecasts?format=json&api_key=${API_KEY}`;
 
+    // Passiamo la chiamata tramite corsproxy.io (funziona gratis su github.io!)
+    const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(SOLCAST_URL);
+
     async function loadData() {
         try {
-            const res = await fetch(SOLCAST_URL);
-            if (!res.ok) throw new Error(`Errore HTTP: ${res.status}`);
+            const res = await fetch(PROXY_URL);
+            
+            // Gestione specifica dell'errore 429 (Troppe richieste Solcast)
+            if (res.status === 429) {
+                throw new Error('Limite chiamate Solcast superato (Errore 429). Riprova più tardi!');
+            }
+            
+            if (!res.ok) {
+                throw new Error(`Errore HTTP: ${res.status}`);
+            }
             
             const rawData = await res.json();
-            document.getElementById('status').textContent = 'Dati live Solcast caricati!';
+            document.getElementById('status').textContent = 'Dati live Solcast caricati con successo!';
             renderDashboard(rawData.forecasts || []);
+            
         } catch (err) {
             console.error(err);
-            document.getElementById('status').textContent = '⚠️ Errore CORS o API Key errata.';
+            document.getElementById('status').textContent = '⚠️ ' + err.message;
         }
     }
 
-    // Mancava questa funzione per elaborare i dati e creare il grafico
     function renderDashboard(forecasts) {
         let maxPeak = 0;
         let totalEnergy = 0;
@@ -96,16 +107,14 @@
         const values = forecasts.map(f => {
             const kw = f.pv_estimate;
             if (kw > maxPeak) maxPeak = kw;
-            totalEnergy += kw * 0.5; // Intervalli di 30 minuti (0.5 ore)
+            totalEnergy += kw * 0.5;
             return kw;
         });
 
-        // Aggiorna le schede KPI
         document.getElementById('kpiPeak').textContent = maxPeak.toFixed(2) + ' kW';
         document.getElementById('kpiEnergy').textContent = totalEnergy.toFixed(2) + ' kWh';
         document.getElementById('kpiCount').textContent = forecasts.length;
 
-        // Disegna il grafico
         const ctx = document.getElementById('solarChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -134,7 +143,6 @@
         });
     }
 
-    // Mancava l'invocazione per avviare il caricamento!
     loadData();
 </script>
 
