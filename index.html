@@ -525,9 +525,6 @@
                 <button class="btn" onclick="fetchSolarData()" id="refreshBtn">
                     <span class="icon">🔄</span> Aggiorna
                 </button>
-                <button class="btn" onclick="toggleTestMode()" id="testModeBtn">
-                    <span class="icon">🧪</span> Modalità Test
-                </button>
                 <button class="btn" onclick="toggleSettings()">
                     <span class="icon">⚙️</span> Impostazioni
                 </button>
@@ -558,16 +555,7 @@
             </div>
         </div>
 
-        <div class="loading-overlay" id="idleState">
-            <div style="font-size: 46px; margin-bottom: 14px;">☀️</div>
-            <p style="color: var(--text-secondary); font-weight: 600;">Nessun dato caricato</p>
-            <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px; max-width: 420px;">
-                Per non sprecare chiamate API, il dashboard non si aggiorna automaticamente all'apertura.<br>
-                Premi <strong>"🔄 Aggiorna"</strong> per una chiamata reale, oppure attiva <strong>"🧪 Modalità Test"</strong> per provare tutto con dati statici senza consumare chiamate.
-            </p>
-        </div>
-
-        <div class="loading-overlay" id="loadingState" style="display:none;">
+        <div class="loading-overlay" id="loadingState">
             <div class="loading-spinner"></div>
             <p style="color: var(--text-secondary); font-weight: 600;">Caricamento previsioni solari...</p>
             <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Connessione a Solcast + Forecast.Solar + Quartz Solar tramite CORS Proxy</p>
@@ -782,86 +770,6 @@
         let forecastsData = []; // merged/averaged data, shape: {period_end, pv_estimate, sources: {solcast, forecastSolar}}
         let mainChartObj = null;
         let dailyChartObj = null;
-        let testMode = false;
-
-        // ---------- Dati statici per la Modalità Test (nessuna chiamata API) ----------
-        const SAMPLE_SOLCAST = {
-            "forecasts": [
-                { "pv_estimate": 2.0277, "period_end": "2026-07-23T07:00:00.0000000Z" },
-                { "pv_estimate": 2.9521, "period_end": "2026-07-23T07:30:00.0000000Z" },
-                { "pv_estimate": 3.3541, "period_end": "2026-07-23T08:00:00.0000000Z" },
-                { "pv_estimate": 3.1515, "period_end": "2026-07-23T08:30:00.0000000Z" },
-                { "pv_estimate": 3.1519, "period_end": "2026-07-23T09:00:00.0000000Z" },
-                { "pv_estimate": 3.4487, "period_end": "2026-07-23T09:30:00.0000000Z" },
-                { "pv_estimate": 3.6511, "period_end": "2026-07-23T10:00:00.0000000Z" },
-                { "pv_estimate": 3.6563, "period_end": "2026-07-23T10:30:00.0000000Z" },
-                { "pv_estimate": 3.4907, "period_end": "2026-07-23T11:00:00.0000000Z" },
-                { "pv_estimate": 3.3715, "period_end": "2026-07-23T11:30:00.0000000Z" },
-                { "pv_estimate": 3.2469, "period_end": "2026-07-23T12:00:00.0000000Z" },
-                { "pv_estimate": 3.0563, "period_end": "2026-07-23T12:30:00.0000000Z" },
-                { "pv_estimate": 2.7874, "period_end": "2026-07-23T13:00:00.0000000Z" },
-                { "pv_estimate": 2.4575, "period_end": "2026-07-23T13:30:00.0000000Z" },
-                { "pv_estimate": 2.0906, "period_end": "2026-07-23T14:00:00.0000000Z" },
-                { "pv_estimate": 1.6608, "period_end": "2026-07-23T14:30:00.0000000Z" },
-                { "pv_estimate": 1.2466, "period_end": "2026-07-23T15:00:00.0000000Z" },
-                { "pv_estimate": 0.8358, "period_end": "2026-07-23T15:30:00.0000000Z" },
-                { "pv_estimate": 0.3901, "period_end": "2026-07-23T16:00:00.0000000Z" },
-                { "pv_estimate": 0.388,  "period_end": "2026-07-23T16:30:00.0000000Z" },
-                { "pv_estimate": 0.3842, "period_end": "2026-07-23T17:00:00.0000000Z" },
-                { "pv_estimate": 0.2955, "period_end": "2026-07-23T17:30:00.0000000Z" },
-                { "pv_estimate": 0.1507, "period_end": "2026-07-23T18:00:00.0000000Z" },
-                { "pv_estimate": 0.0827, "period_end": "2026-07-23T18:30:00.0000000Z" },
-                { "pv_estimate": 0.009,  "period_end": "2026-07-23T19:00:00.0000000Z" },
-                { "pv_estimate": 0,      "period_end": "2026-07-23T19:30:00.0000000Z" },
-                { "pv_estimate": 0.3256, "period_end": "2026-07-24T04:30:00.0000000Z" },
-                { "pv_estimate": 1.0808, "period_end": "2026-07-24T05:00:00.0000000Z" },
-                { "pv_estimate": 1.884,  "period_end": "2026-07-24T05:30:00.0000000Z" },
-                { "pv_estimate": 2.6307, "period_end": "2026-07-24T06:00:00.0000000Z" },
-                { "pv_estimate": 3.2148, "period_end": "2026-07-24T06:30:00.0000000Z" },
-                { "pv_estimate": 3.6692, "period_end": "2026-07-24T07:00:00.0000000Z" },
-                { "pv_estimate": 3.9208, "period_end": "2026-07-24T07:30:00.0000000Z" },
-                { "pv_estimate": 4.1059, "period_end": "2026-07-24T08:00:00.0000000Z" },
-                { "pv_estimate": 4.1663, "period_end": "2026-07-24T08:30:00.0000000Z" },
-                { "pv_estimate": 4.1179, "period_end": "2026-07-24T09:00:00.0000000Z" },
-                { "pv_estimate": 4.1035, "period_end": "2026-07-24T09:30:00.0000000Z" },
-                { "pv_estimate": 4.0848, "period_end": "2026-07-24T10:00:00.0000000Z" },
-                { "pv_estimate": 3.9903, "period_end": "2026-07-24T10:30:00.0000000Z" },
-                { "pv_estimate": 3.8611, "period_end": "2026-07-24T11:00:00.0000000Z" },
-                { "pv_estimate": 3.6836, "period_end": "2026-07-24T11:30:00.0000000Z" },
-                { "pv_estimate": 3.4341, "period_end": "2026-07-24T12:00:00.0000000Z" },
-                { "pv_estimate": 3.1181, "period_end": "2026-07-24T12:30:00.0000000Z" },
-                { "pv_estimate": 2.7807, "period_end": "2026-07-24T13:00:00.0000000Z" },
-                { "pv_estimate": 2.4192, "period_end": "2026-07-24T13:30:00.0000000Z" },
-                { "pv_estimate": 2.0616, "period_end": "2026-07-24T14:00:00.0000000Z" },
-                { "pv_estimate": 1.6544, "period_end": "2026-07-24T14:30:00.0000000Z" },
-                { "pv_estimate": 1.2017, "period_end": "2026-07-24T15:00:00.0000000Z" },
-                { "pv_estimate": 0.7262, "period_end": "2026-07-24T15:30:00.0000000Z" },
-                { "pv_estimate": 0.1484, "period_end": "2026-07-24T16:00:00.0000000Z" },
-                { "pv_estimate": 0.12,   "period_end": "2026-07-24T16:30:00.0000000Z" },
-                { "pv_estimate": 0.1133, "period_end": "2026-07-24T17:00:00.0000000Z" },
-                { "pv_estimate": 0.1051, "period_end": "2026-07-24T17:30:00.0000000Z" },
-                { "pv_estimate": 0.0919, "period_end": "2026-07-24T18:00:00.0000000Z" },
-                { "pv_estimate": 0.0622, "period_end": "2026-07-24T18:30:00.0000000Z" },
-                { "pv_estimate": 0.0089, "period_end": "2026-07-24T19:00:00.0000000Z" }
-            ]
-        };
-
-        // watts orari (locale Europe/Rome) dal JSON Forecast.Solar che hai fornito
-        const SAMPLE_FORECAST_SOLAR_WATTS = {
-            "2026-07-23 06:00:00": 488, "2026-07-23 07:00:00": 1456, "2026-07-23 08:00:00": 2281,
-            "2026-07-23 09:00:00": 2606, "2026-07-23 10:00:00": 2599, "2026-07-23 11:00:00": 2502,
-            "2026-07-23 12:00:00": 2735, "2026-07-23 13:00:00": 3166, "2026-07-23 14:00:00": 3007,
-            "2026-07-23 15:00:00": 2329, "2026-07-23 16:00:00": 1546, "2026-07-23 17:00:00": 861,
-            "2026-07-23 18:00:00": 480, "2026-07-23 19:00:00": 275, "2026-07-23 20:00:00": 108,
-            "2026-07-24 06:00:00": 554, "2026-07-24 07:00:00": 1629, "2026-07-24 08:00:00": 2762,
-            "2026-07-24 09:00:00": 3698, "2026-07-24 10:00:00": 4413, "2026-07-24 11:00:00": 4753,
-            "2026-07-24 12:00:00": 4655, "2026-07-24 13:00:00": 4236, "2026-07-24 14:00:00": 3564,
-            "2026-07-24 15:00:00": 2703, "2026-07-24 16:00:00": 1756, "2026-07-24 17:00:00": 927,
-            "2026-07-24 18:00:00": 477, "2026-07-24 19:00:00": 262, "2026-07-24 20:00:00": 138
-        };
-
-        // power_kw a 15 minuti (UTC) dal JSON Quartz Solar che hai fornito
-        const SAMPLE_QUARTZ_POWER_KW = {"2026-07-23T07:00:00":2.8612230841006263,"2026-07-23T07:15:00":3.002326811242442,"2026-07-23T07:30:00":1.8594412884952285,"2026-07-23T07:45:00":1.8075422598192696,"2026-07-23T08:00:00":1.8579728150224442,"2026-07-23T08:15:00":1.8992764611946653,"2026-07-23T08:30:00":1.7597050888608976,"2026-07-23T08:45:00":1.7808907302353636,"2026-07-23T09:00:00":1.794147865526335,"2026-07-23T09:15:00":1.7995187915533155,"2026-07-23T09:30:00":2.364160011279999,"2026-07-23T09:45:00":2.3510955512098533,"2026-07-23T10:00:00":2.3283351389333595,"2026-07-23T10:15:00":2.2961673236419062,"2026-07-23T10:30:00":2.0585828488957882,"2026-07-23T10:45:00":2.0212937909142616,"2026-07-23T11:00:00":1.9678281117164966,"2026-07-23T11:15:00":1.9061157256749621,"2026-07-23T11:30:00":2.5661112123936825,"2026-07-23T11:45:00":2.4629637867313536,"2026-07-23T12:00:00":2.3803603130310127,"2026-07-23T12:15:00":2.2600066537528543,"2026-07-23T12:30:00":1.893392685055426,"2026-07-23T12:45:00":1.8352893891763133,"2026-07-23T13:00:00":1.6266607757973892,"2026-07-23T13:15:00":1.4654144873802515,"2026-07-23T13:30:00":1.7157267497957713,"2026-07-23T13:45:00":1.5537889191314687,"2026-07-23T14:00:00":1.390397813486294,"2026-07-23T14:15:00":1.244769839492128,"2026-07-23T14:30:00":0.9097734844369284,"2026-07-23T14:45:00":0.7726504274729078,"2026-07-23T15:00:00":0.6387030900505553,"2026-07-23T15:15:00":0.5092293616534315,"2026-07-23T15:30:00":0.3624274629612016,"2026-07-23T15:45:00":0.2877743203921646,"2026-07-23T16:00:00":0.27172590779156935,"2026-07-23T16:15:00":0.25418150771315723,"2026-07-23T16:30:00":0.30716134828864217,"2026-07-23T16:45:00":0.27912285849102947,"2026-07-23T17:00:00":0.24768351093849714,"2026-07-23T17:15:00":0.2120738448372841,"2026-07-23T17:30:00":0.1559609853803765,"2026-07-23T17:45:00":0.11405387041652733,"2026-07-23T18:00:00":0.06848596356536513,"2026-07-23T18:15:00":0.026111152138243308,"2026-07-23T18:30:00":0.0026396100522452677,"2026-07-23T18:45:00":0.0,"2026-07-23T19:00:00":0.0,"2026-07-24T04:00:00":0.044288500875056466,"2026-07-24T04:15:00":0.21836659778555778,"2026-07-24T04:30:00":0.38616183666560344,"2026-07-24T04:45:00":0.6091282251614923,"2026-07-24T05:00:00":0.8205764635140815,"2026-07-24T05:15:00":1.043485643450472,"2026-07-24T05:30:00":1.4367918087185816,"2026-07-24T05:45:00":1.6734997512080991,"2026-07-24T06:00:00":1.9487835440872339,"2026-07-24T06:15:00":2.1371163716714774,"2026-07-24T06:30:00":2.0705130701785164,"2026-07-24T06:45:00":2.214501379432592,"2026-07-24T07:00:00":2.344174107029952,"2026-07-24T07:15:00":2.468994993764254,"2026-07-24T07:30:00":2.2166461363716987,"2026-07-24T07:45:00":2.2938048601994203,"2026-07-24T08:00:00":2.358204660418999,"2026-07-24T08:15:00":2.4109606265207546,"2026-07-24T08:30:00":2.6921879776820075,"2026-07-24T08:45:00":2.7249710984393833,"2026-07-24T09:00:00":2.7454373909085037,"2026-07-24T09:15:00":2.7537875371970504,"2026-07-24T09:30:00":3.02800499962701,"2026-07-24T09:45:00":3.0113185875017776,"2026-07-24T10:00:00":2.9821682996652217,"2026-07-24T10:15:00":2.9409259545658197,"2026-07-24T10:30:00":2.8984493683658474,"2026-07-24T10:45:00":2.834077865764695,"2026-07-24T11:00:00":2.75894988325403,"2026-07-24T11:15:00":2.6726248750061723,"2026-07-24T11:30:00":2.577707045475048,"2026-07-24T11:45:00":2.473812032743578,"2026-07-24T12:00:00":2.3903316574407865,"2026-07-24T12:15:00":2.2691065348800303,"2026-07-24T12:30:00":2.1101335346352426,"2026-07-24T12:45:00":1.9888148007584279,"2026-07-24T13:00:00":1.8564054706556607,"2026-07-24T13:15:00":1.6610507531346865,"2026-07-24T13:30:00":1.5193012688843814,"2026-07-24T13:45:00":1.3752666439959056,"2026-07-24T14:00:00":1.2502919548583293,"2026-07-24T14:15:00":1.102349389712853,"2026-07-24T14:30:00":0.9109035279300551,"2026-07-24T14:45:00":0.7727187390146303,"2026-07-24T15:00:00":0.6377713336274634,"2026-07-24T15:15:00":0.5073792212236963,"2026-07-24T15:30:00":0.36631746715610297,"2026-07-24T15:45:00":0.2946175828738018,"2026-07-24T16:00:00":0.2780635343662368,"2026-07-24T16:15:00":0.25995500419448314,"2026-07-24T16:30:00":0.3096865117104239,"2026-07-24T16:45:00":0.28108816037312434,"2026-07-24T17:00:00":0.24899166279018503,"2026-07-24T17:15:00":0.21260557113472509,"2026-07-24T17:30:00":0.17075091708035184,"2026-07-24T17:45:00":0.12377478094718847,"2026-07-24T18:00:00":0.07293432367250945,"2026-07-24T18:15:00":0.02648565324107576,"2026-07-24T18:30:00":0.0022190267866926574,"2026-07-24T18:45:00":0.0,"2026-07-24T19:00:00":0.0,"2026-07-25T04:00:00":0.026931246154684785,"2026-07-25T04:15:00":0.14547704308550694,"2026-07-25T04:30:00":0.42367487773623386,"2026-07-25T04:45:00":0.6808323806163871,"2026-07-25T05:00:00":0.9495956405779664,"2026-07-25T05:15:00":1.2065405722084368,"2026-07-25T05:30:00":1.359814978826043,"2026-07-25T05:45:00":1.5875775551578641,"2026-07-25T06:00:00":1.8558099367495908,"2026-07-25T06:15:00":2.036805162959826,"2026-07-25T06:30:00":2.697270912441317,"2026-07-25T06:45:00":2.886396476541893};
 
         let config = {
             apiKey: localStorage.getItem('solcast_api_key') || DEFAULT_API_KEY,
@@ -891,15 +799,8 @@
             document.getElementById('qzKwpInput').value = config.qzKwp;
             document.getElementById('qzTiltInput').value = config.qzTilt;
             document.getElementById('qzOrientInput').value = config.qzOrient;
-            showIdleState();
+            fetchSolarData();
         });
-
-        function showIdleState() {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('updateBar').style.display = 'none';
-            document.getElementById('idleState').style.display = 'flex';
-        }
 
         function toggleSettings() {
             document.getElementById('settingsOverlay').classList.toggle('open');
@@ -937,7 +838,6 @@
         }
 
         function showLoading(show) {
-            document.getElementById('idleState').style.display = 'none';
             document.getElementById('loadingState').style.display = show ? 'flex' : 'none';
             if (show) {
                 document.getElementById('mainContent').style.display = 'none';
@@ -1112,64 +1012,11 @@
             return merged;
         }
 
-        // ---------- Modalità Test: nessuna chiamata di rete ----------
-        function toggleTestMode() {
-            testMode = !testMode;
-            const btn = document.getElementById('testModeBtn');
-            if (testMode) {
-                btn.classList.add('btn-primary');
-                btn.innerHTML = '<span class="icon">🧪</span> Test ON';
-            } else {
-                btn.classList.remove('btn-primary');
-                btn.innerHTML = '<span class="icon">🧪</span> Modalità Test';
-            }
-            fetchSolarData();
-        }
-
-        // Simula fetchSolcast usando i dati statici (stessa logica di raggruppamento oraria)
-        async function fetchSolcastMock() {
-            await new Promise(r => setTimeout(r, 300)); // piccolo delay per simulare rete
-            const forecasts = SAMPLE_SOLCAST.forecasts;
-            const hourly = {};
-            forecasts.forEach(f => {
-                const d = new Date(f.period_end);
-                const hourKey = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours())).toISOString();
-                if (!hourly[hourKey]) hourly[hourKey] = [];
-                hourly[hourKey].push(f.pv_estimate);
-            });
-            const result = {};
-            Object.keys(hourly).forEach(k => {
-                const arr = hourly[k];
-                result[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
-            });
-            return result;
-        }
-
-        // Simula fetchForecastSolar usando i dati statici (stessa logica di conversione oraria)
-        async function fetchForecastSolarMock() {
-            await new Promise(r => setTimeout(r, 300));
-            const result = {};
-            Object.keys(SAMPLE_FORECAST_SOLAR_WATTS).forEach(ts => {
-                const localDate = new Date(ts.replace(' ', 'T') + '+02:00');
-                const hourKeyUTC = new Date(Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), localDate.getUTCHours())).toISOString();
-                result[hourKeyUTC] = SAMPLE_FORECAST_SOLAR_WATTS[ts] / 1000;
-            });
-            return result;
-        }
-
-        // Simula fetchQuartz usando i dati statici (stessa logica di raggruppamento oraria)
-        async function fetchQuartzMock() {
-            await new Promise(r => setTimeout(r, 300));
-            return groupQuartzByHour(SAMPLE_QUARTZ_POWER_KW);
-        }
-
         async function fetchSolarData() {
             showLoading(true);
             hideError();
 
-            const results = testMode
-                ? await Promise.allSettled([fetchSolcastMock(), fetchForecastSolarMock(), fetchQuartzMock()])
-                : await Promise.allSettled([fetchSolcast(), fetchForecastSolar(), fetchQuartz()]);
+            const results = await Promise.allSettled([fetchSolcast(), fetchForecastSolar(), fetchQuartz()]);
 
             const solcastResult = results[0];
             const fsResult = results[1];
@@ -1200,7 +1047,7 @@
             if (solcastHourly) activeSources.push('Solcast');
             if (fsHourly) activeSources.push('Forecast.Solar');
             if (qzHourly) activeSources.push('Quartz Solar');
-            document.getElementById('sourcesActive').textContent = (activeSources.join(' + ') || '—') + (testMode ? ' (dati di test)' : '');
+            document.getElementById('sourcesActive').textContent = activeSources.join(' + ') || '—';
 
             showLoading(false);
             document.getElementById('mainContent').style.display = 'block';
