@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
-        /* ===== CSS RESET & VARIABLES ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
@@ -65,7 +64,6 @@
             line-height: 1.6;
         }
 
-        /* ===== BACKGROUND EFFECTS ===== */
         .bg-mesh {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none;
@@ -88,14 +86,12 @@
                 radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.3), transparent);
         }
 
-        /* ===== LAYOUT ===== */
         .app-container {
             position: relative; z-index: 1;
             max-width: 1400px; margin: 0 auto;
             padding: 0 20px 40px;
         }
 
-        /* ===== HEADER ===== */
         .header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 20px 0; flex-wrap: wrap; gap: 16px;
@@ -181,7 +177,6 @@
 
         .btn .icon { font-size: 16px; }
 
-        /* ===== LAST UPDATE BAR ===== */
         .update-bar {
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px 18px; margin-bottom: 24px;
@@ -194,7 +189,6 @@
         .update-bar .label { color: var(--text-muted); }
         .update-bar .value { color: var(--text-secondary); font-weight: 600; }
 
-        /* ===== KPI CARDS ===== */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -275,7 +269,6 @@
         .kpi-card.red .kpi-glow { background: var(--accent-red); }
         .kpi-card.red .kpi-value { color: #f87171; }
 
-        /* ===== PANEL ===== */
         .panel {
             background: var(--bg-card);
             border: 1px solid var(--border-card);
@@ -327,7 +320,6 @@
             height: 350px;
         }
 
-        /* ===== GRID LAYOUTS ===== */
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -338,7 +330,6 @@
             .grid-2 { grid-template-columns: 1fr; }
         }
 
-        /* ===== DAY SELECTOR ===== */
         .day-selector { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .day-btn {
@@ -357,7 +348,6 @@
             color: var(--accent-gold-light);
         }
 
-        /* ===== SETTINGS PANEL ===== */
         .settings-overlay {
             position: fixed; inset: 0; z-index: 100;
             background: rgba(0, 0, 0, 0.6);
@@ -414,7 +404,6 @@
 
         .settings-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 
-        /* ===== ERROR / LOADING STATES ===== */
         .loading-overlay {
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -443,7 +432,6 @@
         .error-box h3 { color: #f87171; font-size: 15px; margin-bottom: 6px; }
         .error-box p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
 
-        /* ===== ENERGY SUMMARY MINI BARS ===== */
         .energy-bar-row {
             display: flex; align-items: center; gap: 12px; padding: 10px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
@@ -455,7 +443,6 @@
         .energy-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent-gold), #f97316); transition: width 0.8s ease; }
         .energy-bar-value { min-width: 70px; text-align: right; font-size: 14px; font-weight: 700; color: var(--accent-gold-light); }
 
-        /* ===== FORECAST TIMELINE ===== */
         .timeline-row {
             display: flex; align-items: center; gap: 12px;
             padding: 8px 12px; border-radius: var(--radius-sm);
@@ -468,14 +455,20 @@
         .timeline-bar-inner { position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); transition: width 0.6s ease; }
         .timeline-val { min-width: 60px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
-        /* ===== FOOTER ===== */
+        .source-tag {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 2px 8px; border-radius: 100px; margin-left: 6px;
+            letter-spacing: 0.4px;
+        }
+        .source-tag.both { background: rgba(16,185,129,0.15); color: var(--accent-green-light); }
+        .source-tag.single { background: rgba(239,68,68,0.15); color: #f87171; }
+
         .footer {
             text-align: center; padding: 30px 0 10px;
             font-size: 12px; color: var(--text-muted);
             border-top: 1px solid var(--border-card); margin-top: 20px;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .app-container { padding: 0 12px 30px; }
             .header { padding: 16px 0; }
@@ -498,7 +491,7 @@
                 <div class="logo-icon">☀️</div>
                 <div class="header-title">
                     <h1>Solar Dashboard</h1>
-                    <p>Previsioni Pannelli Solari</p>
+                    <p>Previsioni Pannelli Solari · Solcast + Forecast.Solar</p>
                 </div>
             </div>
             <div class="header-right">
@@ -508,6 +501,9 @@
                 </div>
                 <button class="btn" onclick="fetchSolarData()" id="refreshBtn">
                     <span class="icon">🔄</span> Aggiorna
+                </button>
+                <button class="btn" onclick="toggleTestMode()" id="testModeBtn">
+                    <span class="icon">🧪</span> Modalità Test
                 </button>
                 <button class="btn" onclick="toggleSettings()">
                     <span class="icon">⚙️</span> Impostazioni
@@ -533,12 +529,25 @@
                 <span class="label">Intervalli:</span>
                 <span class="value" id="totalPeriods">—</span>
             </div>
+            <div>
+                <span class="label">Fonti attive:</span>
+                <span class="value" id="sourcesActive">—</span>
+            </div>
         </div>
 
-        <div class="loading-overlay" id="loadingState">
+        <div class="loading-overlay" id="idleState">
+            <div style="font-size: 46px; margin-bottom: 14px;">☀️</div>
+            <p style="color: var(--text-secondary); font-weight: 600;">Nessun dato caricato</p>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px; max-width: 420px;">
+                Per non sprecare chiamate API, il dashboard non si aggiorna automaticamente all'apertura.<br>
+                Premi <strong>"🔄 Aggiorna"</strong> per una chiamata reale, oppure attiva <strong>"🧪 Modalità Test"</strong> per provare tutto con dati statici senza consumare chiamate.
+            </p>
+        </div>
+
+        <div class="loading-overlay" id="loadingState" style="display:none;">
             <div class="loading-spinner"></div>
             <p style="color: var(--text-secondary); font-weight: 600;">Caricamento previsioni solari...</p>
-            <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Connessione a Solcast API tramite CORS Proxy</p>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Connessione a Solcast + Forecast.Solar tramite CORS Proxy</p>
         </div>
 
         <div id="mainContent" style="display:none;">
@@ -547,14 +556,14 @@
                 <div class="kpi-card gold">
                     <div class="kpi-glow"></div>
                     <div class="kpi-icon">⚡</div>
-                    <div class="kpi-label">Picco Potenza</div>
+                    <div class="kpi-label">Picco Potenza (media)</div>
                     <div class="kpi-value"><span id="kpiPeak">—</span> <span class="kpi-unit">kW</span></div>
                     <div class="kpi-sub" id="kpiPeakTime">—</div>
                 </div>
                 <div class="kpi-card blue">
                     <div class="kpi-glow"></div>
                     <div class="kpi-icon">🔋</div>
-                    <div class="kpi-label">Energia Oggi</div>
+                    <div class="kpi-label">Energia Oggi (media)</div>
                     <div class="kpi-value"><span id="kpiEnergyToday">—</span> <span class="kpi-unit">kWh</span></div>
                     <div class="kpi-sub" id="kpiEnergyRange">Oggi</div>
                 </div>
@@ -568,7 +577,7 @@
                 <div class="kpi-card purple">
                     <div class="kpi-glow"></div>
                     <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">Energia Domani</div>
+                    <div class="kpi-label">Energia Domani (media)</div>
                     <div class="kpi-value"><span id="kpiEnergyTomorrow">—</span> <span class="kpi-unit">kWh</span></div>
                     <div class="kpi-sub" id="kpiEnergyTomorrowRange">Domani</div>
                 </div>
@@ -591,7 +600,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">
-                        <span class="emoji">📈</span> Previsione Potenza
+                        <span class="emoji">📈</span> Previsione Potenza <span style="font-weight:400; font-size:12px; color:var(--text-muted);">(dato unificato)</span>
                     </div>
                     <div class="panel-tabs">
                         <button class="panel-tab active" onclick="setMainChartView('all', this)">Tutto</button>
@@ -629,7 +638,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">
-                        <span class="emoji">🕐</span> Dettaglio Orario
+                        <span class="emoji">🕐</span> Dettaglio Orario <span style="font-weight:400; font-size:12px; color:var(--text-muted);">(dato unificato)</span>
                     </div>
                     <div class="day-selector" id="daySelector"></div>
                 </div>
@@ -639,7 +648,7 @@
         </div>
 
         <footer class="footer">
-            <p>Solar Dashboard — Dati meteo forniti da Solcast API</p>
+            <p>Solar Dashboard — Dati meteo forniti da Solcast API + Forecast.Solar API (media combinata)</p>
         </footer>
     </div>
 
@@ -647,7 +656,7 @@
         <div class="settings-panel">
             <button class="settings-close" onclick="toggleSettings()">✕</button>
             <h2>Impostazioni</h2>
-            <p class="subtitle">Configura i parametri delle API Solcast</p>
+            <p class="subtitle">Configura i parametri delle API Solcast e Forecast.Solar</p>
 
             <div class="settings-group">
                 <label for="apiKeyInput">Solcast API Key</label>
@@ -661,6 +670,28 @@
                 <div class="hint">L'ID del tuo impianto su Solcast.</div>
             </div>
 
+            <div class="settings-group">
+                <label for="fsLatInput">Forecast.Solar — Latitudine</label>
+                <input type="text" id="fsLatInput" placeholder="es. 45.130492">
+            </div>
+            <div class="settings-group">
+                <label for="fsLngInput">Forecast.Solar — Longitudine</label>
+                <input type="text" id="fsLngInput" placeholder="es. 12.076947">
+            </div>
+            <div class="settings-group">
+                <label for="fsDecInput">Forecast.Solar — Inclinazione (dec)</label>
+                <input type="text" id="fsDecInput" placeholder="es. 30">
+            </div>
+            <div class="settings-group">
+                <label for="fsAzInput">Forecast.Solar — Azimuth</label>
+                <input type="text" id="fsAzInput" placeholder="es. -90">
+            </div>
+            <div class="settings-group">
+                <label for="fsKwpInput">Forecast.Solar — Potenza (kWp)</label>
+                <input type="text" id="fsKwpInput" placeholder="es. 6.3">
+                <div class="hint">Rate limit gratuito: 12 chiamate/ora. Usare con parsimonia.</div>
+            </div>
+
             <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveSettings()">Salva e Aggiorna</button>
         </div>
     </div>
@@ -669,21 +700,120 @@
         // Preset chiavi predefinite
         const DEFAULT_API_KEY = 'Zzew_jcS8dHT3ej274HNT8YPibNNVjBR';
         const DEFAULT_RESOURCE_ID = '6666-b7d5-1304-328e';
+        const DEFAULT_FS_LAT = '45.130492';
+        const DEFAULT_FS_LNG = '12.076947';
+        const DEFAULT_FS_DEC = '30';
+        const DEFAULT_FS_AZ = '-90';
+        const DEFAULT_FS_KWP = '6.3';
 
-        let forecastsData = [];
+        let forecastsData = []; // merged/averaged data, shape: {period_end, pv_estimate, sources: {solcast, forecastSolar}}
         let mainChartObj = null;
         let dailyChartObj = null;
+        let testMode = false;
+
+        // ---------- Dati statici per la Modalità Test (nessuna chiamata API) ----------
+        const SAMPLE_SOLCAST = {
+            "forecasts": [
+                { "pv_estimate": 2.0277, "period_end": "2026-07-23T07:00:00.0000000Z" },
+                { "pv_estimate": 2.9521, "period_end": "2026-07-23T07:30:00.0000000Z" },
+                { "pv_estimate": 3.3541, "period_end": "2026-07-23T08:00:00.0000000Z" },
+                { "pv_estimate": 3.1515, "period_end": "2026-07-23T08:30:00.0000000Z" },
+                { "pv_estimate": 3.1519, "period_end": "2026-07-23T09:00:00.0000000Z" },
+                { "pv_estimate": 3.4487, "period_end": "2026-07-23T09:30:00.0000000Z" },
+                { "pv_estimate": 3.6511, "period_end": "2026-07-23T10:00:00.0000000Z" },
+                { "pv_estimate": 3.6563, "period_end": "2026-07-23T10:30:00.0000000Z" },
+                { "pv_estimate": 3.4907, "period_end": "2026-07-23T11:00:00.0000000Z" },
+                { "pv_estimate": 3.3715, "period_end": "2026-07-23T11:30:00.0000000Z" },
+                { "pv_estimate": 3.2469, "period_end": "2026-07-23T12:00:00.0000000Z" },
+                { "pv_estimate": 3.0563, "period_end": "2026-07-23T12:30:00.0000000Z" },
+                { "pv_estimate": 2.7874, "period_end": "2026-07-23T13:00:00.0000000Z" },
+                { "pv_estimate": 2.4575, "period_end": "2026-07-23T13:30:00.0000000Z" },
+                { "pv_estimate": 2.0906, "period_end": "2026-07-23T14:00:00.0000000Z" },
+                { "pv_estimate": 1.6608, "period_end": "2026-07-23T14:30:00.0000000Z" },
+                { "pv_estimate": 1.2466, "period_end": "2026-07-23T15:00:00.0000000Z" },
+                { "pv_estimate": 0.8358, "period_end": "2026-07-23T15:30:00.0000000Z" },
+                { "pv_estimate": 0.3901, "period_end": "2026-07-23T16:00:00.0000000Z" },
+                { "pv_estimate": 0.388,  "period_end": "2026-07-23T16:30:00.0000000Z" },
+                { "pv_estimate": 0.3842, "period_end": "2026-07-23T17:00:00.0000000Z" },
+                { "pv_estimate": 0.2955, "period_end": "2026-07-23T17:30:00.0000000Z" },
+                { "pv_estimate": 0.1507, "period_end": "2026-07-23T18:00:00.0000000Z" },
+                { "pv_estimate": 0.0827, "period_end": "2026-07-23T18:30:00.0000000Z" },
+                { "pv_estimate": 0.009,  "period_end": "2026-07-23T19:00:00.0000000Z" },
+                { "pv_estimate": 0,      "period_end": "2026-07-23T19:30:00.0000000Z" },
+                { "pv_estimate": 0.3256, "period_end": "2026-07-24T04:30:00.0000000Z" },
+                { "pv_estimate": 1.0808, "period_end": "2026-07-24T05:00:00.0000000Z" },
+                { "pv_estimate": 1.884,  "period_end": "2026-07-24T05:30:00.0000000Z" },
+                { "pv_estimate": 2.6307, "period_end": "2026-07-24T06:00:00.0000000Z" },
+                { "pv_estimate": 3.2148, "period_end": "2026-07-24T06:30:00.0000000Z" },
+                { "pv_estimate": 3.6692, "period_end": "2026-07-24T07:00:00.0000000Z" },
+                { "pv_estimate": 3.9208, "period_end": "2026-07-24T07:30:00.0000000Z" },
+                { "pv_estimate": 4.1059, "period_end": "2026-07-24T08:00:00.0000000Z" },
+                { "pv_estimate": 4.1663, "period_end": "2026-07-24T08:30:00.0000000Z" },
+                { "pv_estimate": 4.1179, "period_end": "2026-07-24T09:00:00.0000000Z" },
+                { "pv_estimate": 4.1035, "period_end": "2026-07-24T09:30:00.0000000Z" },
+                { "pv_estimate": 4.0848, "period_end": "2026-07-24T10:00:00.0000000Z" },
+                { "pv_estimate": 3.9903, "period_end": "2026-07-24T10:30:00.0000000Z" },
+                { "pv_estimate": 3.8611, "period_end": "2026-07-24T11:00:00.0000000Z" },
+                { "pv_estimate": 3.6836, "period_end": "2026-07-24T11:30:00.0000000Z" },
+                { "pv_estimate": 3.4341, "period_end": "2026-07-24T12:00:00.0000000Z" },
+                { "pv_estimate": 3.1181, "period_end": "2026-07-24T12:30:00.0000000Z" },
+                { "pv_estimate": 2.7807, "period_end": "2026-07-24T13:00:00.0000000Z" },
+                { "pv_estimate": 2.4192, "period_end": "2026-07-24T13:30:00.0000000Z" },
+                { "pv_estimate": 2.0616, "period_end": "2026-07-24T14:00:00.0000000Z" },
+                { "pv_estimate": 1.6544, "period_end": "2026-07-24T14:30:00.0000000Z" },
+                { "pv_estimate": 1.2017, "period_end": "2026-07-24T15:00:00.0000000Z" },
+                { "pv_estimate": 0.7262, "period_end": "2026-07-24T15:30:00.0000000Z" },
+                { "pv_estimate": 0.1484, "period_end": "2026-07-24T16:00:00.0000000Z" },
+                { "pv_estimate": 0.12,   "period_end": "2026-07-24T16:30:00.0000000Z" },
+                { "pv_estimate": 0.1133, "period_end": "2026-07-24T17:00:00.0000000Z" },
+                { "pv_estimate": 0.1051, "period_end": "2026-07-24T17:30:00.0000000Z" },
+                { "pv_estimate": 0.0919, "period_end": "2026-07-24T18:00:00.0000000Z" },
+                { "pv_estimate": 0.0622, "period_end": "2026-07-24T18:30:00.0000000Z" },
+                { "pv_estimate": 0.0089, "period_end": "2026-07-24T19:00:00.0000000Z" }
+            ]
+        };
+
+        // watts orari (locale Europe/Rome) dal JSON Forecast.Solar che hai fornito
+        const SAMPLE_FORECAST_SOLAR_WATTS = {
+            "2026-07-23 06:00:00": 488, "2026-07-23 07:00:00": 1456, "2026-07-23 08:00:00": 2281,
+            "2026-07-23 09:00:00": 2606, "2026-07-23 10:00:00": 2599, "2026-07-23 11:00:00": 2502,
+            "2026-07-23 12:00:00": 2735, "2026-07-23 13:00:00": 3166, "2026-07-23 14:00:00": 3007,
+            "2026-07-23 15:00:00": 2329, "2026-07-23 16:00:00": 1546, "2026-07-23 17:00:00": 861,
+            "2026-07-23 18:00:00": 480, "2026-07-23 19:00:00": 275, "2026-07-23 20:00:00": 108,
+            "2026-07-24 06:00:00": 554, "2026-07-24 07:00:00": 1629, "2026-07-24 08:00:00": 2762,
+            "2026-07-24 09:00:00": 3698, "2026-07-24 10:00:00": 4413, "2026-07-24 11:00:00": 4753,
+            "2026-07-24 12:00:00": 4655, "2026-07-24 13:00:00": 4236, "2026-07-24 14:00:00": 3564,
+            "2026-07-24 15:00:00": 2703, "2026-07-24 16:00:00": 1756, "2026-07-24 17:00:00": 927,
+            "2026-07-24 18:00:00": 477, "2026-07-24 19:00:00": 262, "2026-07-24 20:00:00": 138
+        };
 
         let config = {
             apiKey: localStorage.getItem('solcast_api_key') || DEFAULT_API_KEY,
-            resourceId: localStorage.getItem('solcast_resource_id') || DEFAULT_RESOURCE_ID
+            resourceId: localStorage.getItem('solcast_resource_id') || DEFAULT_RESOURCE_ID,
+            fsLat: localStorage.getItem('fs_lat') || DEFAULT_FS_LAT,
+            fsLng: localStorage.getItem('fs_lng') || DEFAULT_FS_LNG,
+            fsDec: localStorage.getItem('fs_dec') || DEFAULT_FS_DEC,
+            fsAz: localStorage.getItem('fs_az') || DEFAULT_FS_AZ,
+            fsKwp: localStorage.getItem('fs_kwp') || DEFAULT_FS_KWP
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('apiKeyInput').value = config.apiKey;
             document.getElementById('resourceIdInput').value = config.resourceId;
-            fetchSolarData();
+            document.getElementById('fsLatInput').value = config.fsLat;
+            document.getElementById('fsLngInput').value = config.fsLng;
+            document.getElementById('fsDecInput').value = config.fsDec;
+            document.getElementById('fsAzInput').value = config.fsAz;
+            document.getElementById('fsKwpInput').value = config.fsKwp;
+            showIdleState();
         });
+
+        function showIdleState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('updateBar').style.display = 'none';
+            document.getElementById('idleState').style.display = 'flex';
+        }
 
         function toggleSettings() {
             document.getElementById('settingsOverlay').classList.toggle('open');
@@ -692,15 +822,26 @@
         function saveSettings() {
             config.apiKey = document.getElementById('apiKeyInput').value.trim() || DEFAULT_API_KEY;
             config.resourceId = document.getElementById('resourceIdInput').value.trim() || DEFAULT_RESOURCE_ID;
+            config.fsLat = document.getElementById('fsLatInput').value.trim() || DEFAULT_FS_LAT;
+            config.fsLng = document.getElementById('fsLngInput').value.trim() || DEFAULT_FS_LNG;
+            config.fsDec = document.getElementById('fsDecInput').value.trim() || DEFAULT_FS_DEC;
+            config.fsAz = document.getElementById('fsAzInput').value.trim() || DEFAULT_FS_AZ;
+            config.fsKwp = document.getElementById('fsKwpInput').value.trim() || DEFAULT_FS_KWP;
 
             localStorage.setItem('solcast_api_key', config.apiKey);
             localStorage.setItem('solcast_resource_id', config.resourceId);
+            localStorage.setItem('fs_lat', config.fsLat);
+            localStorage.setItem('fs_lng', config.fsLng);
+            localStorage.setItem('fs_dec', config.fsDec);
+            localStorage.setItem('fs_az', config.fsAz);
+            localStorage.setItem('fs_kwp', config.fsKwp);
 
             toggleSettings();
             fetchSolarData();
         }
 
         function showLoading(show) {
+            document.getElementById('idleState').style.display = 'none';
             document.getElementById('loadingState').style.display = show ? 'flex' : 'none';
             if (show) {
                 document.getElementById('mainContent').style.display = 'none';
@@ -718,54 +859,199 @@
             document.getElementById('errorBox').classList.remove('show');
         }
 
+        // ---------- Fetch: Solcast ----------
+        async function fetchSolcast() {
+            const solcastUrl = `https://api.solcast.com.au/rooftop_sites/${config.resourceId}/forecasts?format=json&api_key=${config.apiKey}`;
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(solcastUrl);
+
+            const response = await fetch(proxyUrl);
+            if (response.status === 429) {
+                throw new Error("Limite giornaliero chiamate Solcast superato (Errore 429).");
+            }
+            if (!response.ok) {
+                throw new Error(`Errore Solcast API: status ${response.status}`);
+            }
+            const data = await response.json();
+            const forecasts = data.forecasts || [];
+            if (forecasts.length === 0) throw new Error("Solcast: nessun dato di previsione ricevuto.");
+
+            // Normalizza in bucket orari UTC: media dei due valori a 30 minuti -> potenza media dell'ora (kW)
+            const hourly = {};
+            forecasts.forEach(f => {
+                const d = new Date(f.period_end);
+                const hourKey = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours())).toISOString();
+                if (!hourly[hourKey]) hourly[hourKey] = [];
+                hourly[hourKey].push(f.pv_estimate);
+            });
+            const result = {};
+            Object.keys(hourly).forEach(k => {
+                const arr = hourly[k];
+                result[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
+            });
+            return result; // { isoHourUTC: kW }
+        }
+
+        // ---------- Fetch: Forecast.Solar ----------
+        async function fetchForecastSolar() {
+            const fsUrl = `https://api.forecast.solar/estimate/${config.fsLat}/${config.fsLng}/${config.fsDec}/${config.fsAz}/${config.fsKwp}`;
+
+            let response;
+            try {
+                response = await fetch(fsUrl);
+                if (!response.ok) throw new Error('direct-failed');
+            } catch (e) {
+                // fallback tramite proxy CORS se la chiamata diretta fallisce
+                response = await fetch('https://corsproxy.io/?' + encodeURIComponent(fsUrl));
+            }
+
+            if (response.status === 429) {
+                throw new Error("Limite chiamate Forecast.Solar superato (Errore 429, max 12/ora sul piano gratuito).");
+            }
+            if (!response.ok) {
+                throw new Error(`Errore Forecast.Solar API: status ${response.status}`);
+            }
+
+            const data = await response.json();
+            const watts = (data.result && data.result.watts) || {};
+
+            // Forecast.Solar restituisce orari locali (Europe/Rome). Convertiamo in bucket orari UTC.
+            // Consideriamo solo i timestamp "in punta" (minuti/secondi a 00:00) per allinearci alle ore intere.
+            const result = {};
+            Object.keys(watts).forEach(ts => {
+                if (!ts.endsWith(':00:00')) return; // scarta i punti parziali di alba/tramonto
+                // Parso come ora locale Europe/Rome (CEST, UTC+2 in estate)
+                const localDate = new Date(ts.replace(' ', 'T') + '+02:00');
+                const hourKeyUTC = new Date(Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), localDate.getUTCHours())).toISOString();
+                result[hourKeyUTC] = watts[ts] / 1000; // W -> kW
+            });
+            return result; // { isoHourUTC: kW }
+        }
+
+        // ---------- Merge & media ----------
+        function mergeSources(solcastHourly, forecastSolarHourly) {
+            const allKeys = new Set([...Object.keys(solcastHourly || {}), ...Object.keys(forecastSolarHourly || {})]);
+            const merged = [];
+            allKeys.forEach(key => {
+                const sc = solcastHourly ? solcastHourly[key] : undefined;
+                const fs = forecastSolarHourly ? forecastSolarHourly[key] : undefined;
+                let avg, sourceCount;
+                if (sc !== undefined && fs !== undefined) {
+                    avg = (sc + fs) / 2;
+                    sourceCount = 2;
+                } else if (sc !== undefined) {
+                    avg = sc;
+                    sourceCount = 1;
+                } else {
+                    avg = fs;
+                    sourceCount = 1;
+                }
+                merged.push({
+                    period_end: key,
+                    pv_estimate: avg,
+                    solcast: sc,
+                    forecastSolar: fs,
+                    sourceCount: sourceCount
+                });
+            });
+            merged.sort((a, b) => new Date(a.period_end) - new Date(b.period_end));
+            return merged;
+        }
+
+        // ---------- Modalità Test: nessuna chiamata di rete ----------
+        function toggleTestMode() {
+            testMode = !testMode;
+            const btn = document.getElementById('testModeBtn');
+            if (testMode) {
+                btn.classList.add('btn-primary');
+                btn.innerHTML = '<span class="icon">🧪</span> Test ON';
+            } else {
+                btn.classList.remove('btn-primary');
+                btn.innerHTML = '<span class="icon">🧪</span> Modalità Test';
+            }
+            fetchSolarData();
+        }
+
+        // Simula fetchSolcast usando i dati statici (stessa logica di raggruppamento oraria)
+        async function fetchSolcastMock() {
+            await new Promise(r => setTimeout(r, 300)); // piccolo delay per simulare rete
+            const forecasts = SAMPLE_SOLCAST.forecasts;
+            const hourly = {};
+            forecasts.forEach(f => {
+                const d = new Date(f.period_end);
+                const hourKey = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours())).toISOString();
+                if (!hourly[hourKey]) hourly[hourKey] = [];
+                hourly[hourKey].push(f.pv_estimate);
+            });
+            const result = {};
+            Object.keys(hourly).forEach(k => {
+                const arr = hourly[k];
+                result[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
+            });
+            return result;
+        }
+
+        // Simula fetchForecastSolar usando i dati statici (stessa logica di conversione oraria)
+        async function fetchForecastSolarMock() {
+            await new Promise(r => setTimeout(r, 300));
+            const result = {};
+            Object.keys(SAMPLE_FORECAST_SOLAR_WATTS).forEach(ts => {
+                const localDate = new Date(ts.replace(' ', 'T') + '+02:00');
+                const hourKeyUTC = new Date(Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), localDate.getUTCHours())).toISOString();
+                result[hourKeyUTC] = SAMPLE_FORECAST_SOLAR_WATTS[ts] / 1000;
+            });
+            return result;
+        }
+
         async function fetchSolarData() {
             showLoading(true);
             hideError();
 
-            const solcastUrl = `https://api.solcast.com.au/rooftop_sites/${config.resourceId}/forecasts?format=json&api_key=${config.apiKey}`;
-            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(solcastUrl);
+            const results = testMode
+                ? await Promise.allSettled([fetchSolcastMock(), fetchForecastSolarMock()])
+                : await Promise.allSettled([fetchSolcast(), fetchForecastSolar()]);
 
-            try {
-                const response = await fetch(proxyUrl);
-                
-                if (response.status === 429) {
-                    throw new Error("Limite giornaliero chiamate Solcast superato (Errore 429). Riprova più tardi!");
-                }
-                
-                if (!response.ok) {
-                    throw new Error(`Errore Solcast API: status ${response.status}`);
-                }
+            const solcastResult = results[0];
+            const fsResult = results[1];
 
-                const data = await response.json();
-                forecastsData = data.forecasts || [];
+            const errors = [];
+            if (solcastResult.status === 'rejected') errors.push('Solcast: ' + solcastResult.reason.message);
+            if (fsResult.status === 'rejected') errors.push('Forecast.Solar: ' + fsResult.reason.message);
 
-                if (forecastsData.length === 0) {
-                    throw new Error("Nessun dato di previsione ricevuto.");
-                }
+            const solcastHourly = solcastResult.status === 'fulfilled' ? solcastResult.value : null;
+            const fsHourly = fsResult.status === 'fulfilled' ? fsResult.value : null;
 
+            if (!solcastHourly && !fsHourly) {
                 showLoading(false);
-                document.getElementById('mainContent').style.display = 'block';
-                document.getElementById('updateBar').style.display = 'flex';
-
-                renderAllDashboard(forecastsData);
-
-            } catch (err) {
-                showLoading(false);
-                console.error(err);
-                showError(err.message);
+                showError('Entrambe le fonti hanno fallito. ' + errors.join(' | '));
+                return;
             }
+
+            if (errors.length > 0) {
+                showError('Una fonte non disponibile, uso solo i dati rimanenti. ' + errors.join(' | '));
+            }
+
+            forecastsData = mergeSources(solcastHourly, fsHourly);
+
+            const activeSources = [];
+            if (solcastHourly) activeSources.push('Solcast');
+            if (fsHourly) activeSources.push('Forecast.Solar');
+            document.getElementById('sourcesActive').textContent = (activeSources.join(' + ') || '—') + (testMode ? ' (dati di test)' : '');
+
+            showLoading(false);
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('updateBar').style.display = 'flex';
+
+            renderAllDashboard(forecastsData);
         }
 
         function renderAllDashboard(data) {
-            // Ultimo aggiornamento
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('totalPeriods').textContent = data.length + " intervalli (30m)";
+            document.getElementById('totalPeriods').textContent = data.length + " intervalli (1h, media)";
 
             const startDate = new Date(data[0].period_end);
             const endDate = new Date(data[data.length - 1].period_end);
             document.getElementById('forecastRange').textContent = `${startDate.getDate()}/${startDate.getMonth()+1} - ${endDate.getDate()}/${endDate.getMonth()+1}`;
 
-            // Calcolo KPI
             let peakKw = 0;
             let peakTime = null;
             let totalEnergyAll = 0;
@@ -788,12 +1074,12 @@
                     peakTime = fDate;
                 }
 
-                const energyKwh = kw * 0.5; // Intervallo di 30m = 0.5 ore
+                const energyKwh = kw * 1; // bucket di 1 ora
                 totalEnergyAll += energyKwh;
 
                 if (dateStr === todayStr) {
                     todayEnergy += energyKwh;
-                    if (kw > 0.1) todaySunHoursCount += 0.5;
+                    if (kw > 0.1) todaySunHoursCount += 1;
                 } else if (dateStr === tomorrowStr) {
                     tomorrowEnergy += energyKwh;
                 }
@@ -807,12 +1093,10 @@
             document.getElementById('kpiSunHours').textContent = todaySunHoursCount.toFixed(1);
             document.getElementById('kpiTotalEnergy').textContent = totalEnergyAll.toFixed(2);
 
-            // Prossima previsione
-            const nextForecast = data[0];
+            const nextForecast = data.find(f => new Date(f.period_end) >= new Date()) || data[0];
             document.getElementById('kpiNext').textContent = nextForecast ? nextForecast.pv_estimate.toFixed(2) : '—';
             document.getElementById('kpiNextTime').textContent = nextForecast ? new Date(nextForecast.period_end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '—';
 
-            // Grafici e Timeline
             renderMainChart(data, 'all');
             renderDailyChartAndBars(data);
             renderHourlyTimeline(data);
@@ -820,7 +1104,7 @@
 
         function renderMainChart(data, filter) {
             const ctx = document.getElementById('mainChart').getContext('2d');
-            
+
             let filteredData = data;
             const todayStr = new Date().toISOString().split('T')[0];
             const tomorrow = new Date();
@@ -834,7 +1118,7 @@
             }
 
             const labels = filteredData.map(f => new Date(f.period_end));
-            const values = filteredData.map(f => f.pv_estimate);
+            const avgValues = filteredData.map(f => f.pv_estimate);
 
             if (mainChartObj) mainChartObj.destroy();
 
@@ -842,16 +1126,19 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Potenza Stimata (kW)',
-                        data: values,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
+                    datasets: [
+                        {
+                            label: 'Potenza Stimata (kW)',
+                            data: avgValues,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            borderWidth: 2.5
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -886,14 +1173,13 @@
             const dailyTotals = {};
             data.forEach(f => {
                 const dateStr = new Date(f.period_end).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
-                const energy = f.pv_estimate * 0.5;
+                const energy = f.pv_estimate * 1;
                 dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + energy;
             });
 
             const labels = Object.keys(dailyTotals);
             const values = Object.values(dailyTotals);
 
-            // Grafico a barre
             const ctx = document.getElementById('dailyChart').getContext('2d');
             if (dailyChartObj) dailyChartObj.destroy();
 
@@ -902,7 +1188,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Energia (kWh)',
+                        label: 'Energia (kWh, media)',
                         data: values,
                         backgroundColor: 'rgba(59, 130, 246, 0.6)',
                         borderColor: '#3b82f6',
@@ -921,7 +1207,6 @@
                 }
             });
 
-            // Barre orizzontali di riepilogo
             const maxVal = Math.max(...values, 1);
             const summaryContainer = document.getElementById('energySummaryBars');
             summaryContainer.innerHTML = '';
@@ -980,6 +1265,8 @@
                 const time = new Date(f.period_end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
                 const kw = f.pv_estimate;
                 const pct = (kw / maxKw) * 100;
+                // Se manca una fonte per quest'ora, lo segnaliamo solo con un piccolo indicatore discreto (nessuna media possibile)
+                const fallbackTag = f.sourceCount === 1 ? `<span class="source-tag single">solo 1 fonte</span>` : '';
 
                 container.innerHTML += `
                     <div class="timeline-row">
@@ -990,6 +1277,7 @@
                             </div>
                         </div>
                         <div class="timeline-val">${kw.toFixed(2)} kW</div>
+                        ${fallbackTag}
                     </div>
                 `;
             });
