@@ -463,6 +463,29 @@
         .source-tag.both { background: rgba(16,185,129,0.15); color: var(--accent-green-light); }
         .source-tag.single { background: rgba(239,68,68,0.15); color: #f87171; }
 
+        .appliance-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: var(--radius-sm);
+            transition: background var(--transition-fast);
+        }
+        .appliance-row:hover { background: rgba(255, 255, 255, 0.03); }
+        .appliance-time { min-width: 60px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .appliance-power { min-width: 60px; font-size: 12px; color: var(--text-muted); }
+        .appliance-icons { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; font-size: 18px; }
+        .appliance-icon-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+        .savings-cards {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+        .savings-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-card);
+            border-radius: var(--radius-md); padding: 16px 18px;
+        }
+        .savings-card .label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .savings-card .value { font-size: 24px; font-weight: 800; color: var(--accent-green-light); }
+        .savings-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
         .footer {
             text-align: center; padding: 30px 0 10px;
             font-size: 12px; color: var(--text-muted);
@@ -645,10 +668,34 @@
                 <div id="hourlyTimeline"></div>
             </div>
 
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="emoji">🏠</span> Quando Accendere gli Elettrodomestici
+                    </div>
+                    <div class="day-selector" id="applianceDaySelector"></div>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Suggerimenti basati sulla potenza solare media prevista per ogni ora (dato unificato).</p>
+                <div id="applianceTimeline"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="emoji">💶</span> Calcolatore Risparmio
+                    </div>
+                </div>
+                <div class="settings-group" style="max-width: 260px; margin-bottom: 20px;">
+                    <label for="energyPriceInput">Prezzo energia (€/kWh)</label>
+                    <input type="text" id="energyPriceInput" placeholder="es. 0.30" oninput="renderSavingsCalculator(forecastsData)">
+                </div>
+                <div id="savingsSummary"></div>
+            </div>
+
         </div>
 
         <footer class="footer">
-            <p>Solar Dashboard — Dati meteo forniti da Solcast API + Forecast.Solar API (media combinata)</p>
+            <p>Solar Dashboard — Dati meteo forniti da Solcast API + Forecast.Solar API + Quartz Solar API (media combinata)</p>
         </footer>
     </div>
 
@@ -1218,6 +1265,142 @@
             renderMainChart(data, 'all');
             renderDailyChartAndBars(data);
             renderHourlyTimeline(data);
+            renderApplianceSuggestions(data);
+            renderSavingsCalculator(data);
+        }
+
+        // ============================================================
+        // NUOVE FUNZIONALITÀ (non toccano la logica di fetch/merge sopra)
+        // ============================================================
+
+        const DEFAULT_ENERGY_PRICE = '0.30';
+
+        // Elettrodomestici e soglia di potenza indicativa (kW) per farli funzionare "gratis" col sole.
+        // Aria condizionata esclusa volutamente su richiesta.
+        const APPLIANCES = [
+            { emoji: '🧹', name: 'Aspirapolvere', kw: 0.8 },
+            { emoji: '🍽️', name: 'Lavastoviglie', kw: 1.5 },
+            { emoji: '👕', name: 'Lavatrice', kw: 2.0 },
+            { emoji: '🍳', name: 'Forno', kw: 2.5 },
+            { emoji: '🚗', name: 'Ricarica Auto Elettrica', kw: 3.0 }
+        ];
+
+        function getFittingAppliances(kw) {
+            // Elettrodomestici che possono funzionare singolarmente con la potenza disponibile
+            const single = APPLIANCES.filter(a => kw >= a.kw);
+
+            // Migliore combinazione di 2 elettrodomestici insieme (se ce ne sta più di uno)
+            let bestCombo = null;
+            for (let i = 0; i < APPLIANCES.length; i++) {
+                for (let j = i + 1; j < APPLIANCES.length; j++) {
+                    const sum = APPLIANCES[i].kw + APPLIANCES[j].kw;
+                    if (sum <= kw) {
+                        if (!bestCombo || sum > bestCombo.sum) {
+                            bestCombo = { items: [APPLIANCES[i], APPLIANCES[j]], sum };
+                        }
+                    }
+                }
+            }
+            return { single, combo: bestCombo };
+        }
+
+        function renderApplianceSuggestions(data) {
+            const groupedByDay = {};
+            data.forEach(f => {
+                const dateKey = new Date(f.period_end).toISOString().split('T')[0];
+                if (!groupedByDay[dateKey]) groupedByDay[dateKey] = [];
+                groupedByDay[dateKey].push(f);
+            });
+
+            const days = Object.keys(groupedByDay);
+            const selector = document.getElementById('applianceDaySelector');
+            selector.innerHTML = '';
+
+            days.forEach((dayStr, idx) => {
+                const d = new Date(dayStr);
+                const label = d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' });
+                const btn = document.createElement('button');
+                btn.className = `day-btn ${idx === 0 ? 'active' : ''}`;
+                btn.textContent = label;
+                btn.onclick = () => {
+                    document.querySelectorAll('#applianceDaySelector .day-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    drawApplianceRows(groupedByDay[dayStr]);
+                };
+                selector.appendChild(btn);
+            });
+
+            if (days.length > 0) drawApplianceRows(groupedByDay[days[0]]);
+        }
+
+        function drawApplianceRows(dayData) {
+            const container = document.getElementById('applianceTimeline');
+            container.innerHTML = '';
+
+            dayData.forEach(f => {
+                const time = new Date(f.period_end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const kw = f.pv_estimate;
+                const { single, combo } = getFittingAppliances(kw);
+
+                let iconsHtml = '';
+                if (single.length === 0) {
+                    iconsHtml = '<span class="appliance-icon-empty">— potenza insufficiente —</span>';
+                } else {
+                    iconsHtml += single.map(a => `<span title="${a.name} (${a.kw} kW)">${a.emoji}</span>`).join('');
+                    if (combo) {
+                        iconsHtml += `<span style="color:var(--text-muted); font-size:12px; margin-left:6px;">➕ combo: ${combo.items.map(a => a.emoji + ' ' + a.name).join(' + ')} (${combo.sum.toFixed(1)} kW)</span>`;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="appliance-row">
+                        <div class="appliance-time">${time}</div>
+                        <div class="appliance-power">${kw.toFixed(2)} kW</div>
+                        <div class="appliance-icons">${iconsHtml}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderSavingsCalculator(data) {
+            const priceInput = document.getElementById('energyPriceInput');
+            if (!priceInput.value) priceInput.value = DEFAULT_ENERGY_PRICE;
+            const price = parseFloat(priceInput.value.replace(',', '.')) || parseFloat(DEFAULT_ENERGY_PRICE);
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            let todayEnergy = 0, tomorrowEnergy = 0, totalEnergy = 0;
+            data.forEach(f => {
+                const dateStr = new Date(f.period_end).toISOString().split('T')[0];
+                const kwh = f.pv_estimate * 1; // bucket da 1 ora
+                totalEnergy += kwh;
+                if (dateStr === todayStr) todayEnergy += kwh;
+                else if (dateStr === tomorrowStr) tomorrowEnergy += kwh;
+            });
+
+            const container = document.getElementById('savingsSummary');
+            container.innerHTML = `
+                <div class="savings-cards">
+                    <div class="savings-card">
+                        <div class="label">Risparmio Oggi</div>
+                        <div class="value">€ ${(todayEnergy * price).toFixed(2)}</div>
+                        <div class="sub">${todayEnergy.toFixed(2)} kWh stimati</div>
+                    </div>
+                    <div class="savings-card">
+                        <div class="label">Risparmio Domani</div>
+                        <div class="value">€ ${(tomorrowEnergy * price).toFixed(2)}</div>
+                        <div class="sub">${tomorrowEnergy.toFixed(2)} kWh stimati</div>
+                    </div>
+                    <div class="savings-card">
+                        <div class="label">Risparmio Totale Previsto</div>
+                        <div class="value">€ ${(totalEnergy * price).toFixed(2)}</div>
+                        <div class="sub">${totalEnergy.toFixed(2)} kWh su tutto il periodo</div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderMainChart(data, filter) {
